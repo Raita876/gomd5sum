@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/xerrors"
 
-	"gomd5sum/md5"
+	md5 "gomd5sum/md5"
 )
 
 var (
@@ -44,40 +44,6 @@ func (ic isCheckOption) apply(c *CommandLine) {
 	c.IsCheck = true
 }
 
-type HashResult struct {
-	Path  string
-	Md5   string
-	Error error
-}
-
-func Hash(path string) HashResult {
-	f, err := os.Open(path)
-	if err != nil {
-		return HashResult{Error: err}
-	}
-
-	md5, err := md5.Hash(f)
-	if err != nil {
-		return HashResult{Error: err}
-	}
-
-	return HashResult{
-		Path:  path,
-		Md5:   md5,
-		Error: err,
-	}
-}
-
-func HasHashError(hrl []HashResult) bool {
-	for _, hr := range hrl {
-		if hr.Error != nil {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (c *CommandLine) Set(opts ...Option) {
 	for _, o := range opts {
 		o.apply(c)
@@ -85,21 +51,21 @@ func (c *CommandLine) Set(opts ...Option) {
 }
 
 func (c *CommandLine) Md5sum() error {
-	hrl := []HashResult{}
+	hrl := []md5.HashResult{}
 
 	for _, p := range c.Paths {
-		hrl = append(hrl, Hash(p))
+		hrl = append(hrl, md5.Hash(p))
 	}
 
 	for _, hr := range hrl {
 		if hr.Error == nil {
-			fmt.Printf("%s  %s\n", hr.Md5, hr.Path)
+			fmt.Printf("%s  %s\n", hr.Md5.Value, hr.Md5.Path)
 		} else {
 			fmt.Printf("%s: %s\n", name, hr.Error)
 		}
 	}
 
-	if HasHashError(hrl) {
+	if md5.HasHashError(hrl) {
 		return xerrors.New("Failure exec command")
 	}
 

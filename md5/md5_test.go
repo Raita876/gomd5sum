@@ -20,7 +20,7 @@ func TestHash(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got, err := Hash(tt.r)
+		got, err := hash(tt.r)
 		if err != nil {
 			t.Error(err)
 		}
