@@ -16,9 +16,10 @@ var (
 )
 
 type CommandLine struct {
-	Paths  []string
-	IsBin  bool
-	IsText bool
+	Paths   []string
+	IsBin   bool
+	IsText  bool
+	IsCheck bool
 }
 
 type Option interface {
@@ -35,6 +36,12 @@ type isTextOption bool
 
 func (it isTextOption) apply(c *CommandLine) {
 	c.IsText = true
+}
+
+type isCheckOption bool
+
+func (ic isCheckOption) apply(c *CommandLine) {
+	c.IsCheck = true
 }
 
 type HashResult struct {
@@ -77,7 +84,7 @@ func (c *CommandLine) Set(opts ...Option) {
 	}
 }
 
-func (c *CommandLine) Exec() error {
+func (c *CommandLine) Md5sum() error {
 	hrl := []HashResult{}
 
 	for _, p := range c.Paths {
@@ -99,6 +106,10 @@ func (c *CommandLine) Exec() error {
 	return nil
 }
 
+func (c *CommandLine) Exec() error {
+	return c.Md5sum()
+}
+
 func main() {
 	app := &cli.App{
 		Version: version,
@@ -117,6 +128,7 @@ func main() {
 			cl.Set(
 				isBinOption(false),
 				isTextOption(false),
+				isCheckOption(false),
 			)
 
 			return cl.Exec()
