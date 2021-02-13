@@ -17,6 +17,14 @@ type Md5 struct {
 	Value string
 }
 
+func (hr *HashResult) Print() string {
+	if hr.Error != nil {
+		return fmt.Sprintf("md5sum: %s", hr.Error)
+	}
+
+	return fmt.Sprintf("%s  %s", hr.Md5.Value, hr.Md5.Path)
+}
+
 func Hash(path string) HashResult {
 	f, err := os.Open(path)
 	if err != nil {

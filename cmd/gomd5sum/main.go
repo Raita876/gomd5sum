@@ -52,21 +52,16 @@ func (c *CommandLine) Set(opts ...Option) {
 
 func (c *CommandLine) Md5sum() error {
 	hrl := []md5.HashResult{}
-
 	for _, p := range c.Paths {
 		hrl = append(hrl, md5.Hash(p))
 	}
 
 	for _, hr := range hrl {
-		if hr.Error == nil {
-			fmt.Printf("%s  %s\n", hr.Md5.Value, hr.Md5.Path)
-		} else {
-			fmt.Printf("%s: %s\n", name, hr.Error)
-		}
+		fmt.Printf("%s\n", hr.Print())
 	}
 
 	if md5.HasHashError(hrl) {
-		return xerrors.New("Failure exec command")
+		return xerrors.New("Failure Md5sum")
 	}
 
 	return nil
