@@ -9,5 +9,5 @@ build:
 		.
 
 .PHONY: integrationtest
-integrationtest:
+integrationtest: build
 	./integrationtest.sh

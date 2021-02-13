@@ -15,16 +15,11 @@ function test_standard() {
     tmpB=$(mktemp "${tmpdir}/XXXXXX")
     tmpC=$(mktemp "${tmpdir}/XXXXXX")
 
-    local got
-    got=$(${GOMD5SUM} "${tmpA}" "${tmpB}" "${tmpC}")
-
-    local want
-    want=$(md5sum "${tmpA}" "${tmpB}" "${tmpC}")
-
-    if [[ "${got}" != "${want}" ]]; then
-        echo "[ERRO] There is a difference between got and want."
+    if ! diff -u <(${GOMD5SUM} "${tmpA}" "${tmpB}" "${tmpC}") <(md5sum "${tmpA}" "${tmpB}" "${tmpC}"); then
+        echo "[test_standard] NG: There is a difference between got and want."
+        exit 1
     else
-        echo "[INFO] OK"
+        echo "[test_standard] OK"
     fi
 
     rm -r "${tmpdir}"
