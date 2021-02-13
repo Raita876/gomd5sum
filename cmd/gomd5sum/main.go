@@ -17,6 +17,17 @@ var (
 
 type CommandLine struct {
 	Paths []string
+	IsBin bool
+}
+
+type Option interface {
+	apply(*CommandLine)
+}
+
+type isBinOption bool
+
+func (ib isBinOption) apply(c *CommandLine) {
+	c.IsBin = true
 }
 
 type HashResult struct {
@@ -53,6 +64,12 @@ func HasHashError(hrl []HashResult) bool {
 	return false
 }
 
+func (c *CommandLine) Set(opts ...Option) {
+	for _, o := range opts {
+		o.apply(c)
+	}
+}
+
 func (c *CommandLine) Exec() error {
 	hrl := []HashResult{}
 
@@ -64,7 +81,7 @@ func (c *CommandLine) Exec() error {
 		if hr.Error == nil {
 			fmt.Printf("%s  %s\n", hr.Md5, hr.Path)
 		} else {
-			fmt.Printf("gomd5sum: %s\n", hr.Error)
+			fmt.Printf("%s: %s\n", name, hr.Error)
 		}
 	}
 
@@ -86,9 +103,13 @@ func main() {
 				paths = append(paths, c.Args().Get(i))
 			}
 
-			cl := CommandLine{
+			cl := &CommandLine{
 				Paths: paths,
 			}
+
+			cl.Set(
+				isBinOption(false),
+			)
 
 			return cl.Exec()
 		},
