@@ -16,8 +16,9 @@ var (
 )
 
 type CommandLine struct {
-	Paths []string
-	IsBin bool
+	Paths  []string
+	IsBin  bool
+	IsText bool
 }
 
 type Option interface {
@@ -28,6 +29,12 @@ type isBinOption bool
 
 func (ib isBinOption) apply(c *CommandLine) {
 	c.IsBin = true
+}
+
+type isTextOption bool
+
+func (it isTextOption) apply(c *CommandLine) {
+	c.IsText = true
 }
 
 type HashResult struct {
@@ -109,6 +116,7 @@ func main() {
 
 			cl.Set(
 				isBinOption(false),
+				isTextOption(false),
 			)
 
 			return cl.Exec()
