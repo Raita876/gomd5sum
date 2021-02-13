@@ -26,6 +26,8 @@ function test_standard() {
     else
         echo "[INFO] OK"
     fi
+
+    rm -r "${tmpdir}"
 }
 
 function main() {
