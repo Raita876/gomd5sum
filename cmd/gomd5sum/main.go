@@ -50,6 +50,33 @@ func (c *CommandLine) Set(opts ...Option) {
 	}
 }
 
+func (c *CommandLine) Check() error {
+	ml := []md5.Md5{}
+	for _, p := range c.Paths {
+		tmpMl, err := md5.Parse(p)
+		if err != nil {
+			return err
+		}
+
+		ml = append(ml, tmpMl...)
+	}
+
+	crl := []md5.CheckResult{}
+	for _, m := range ml {
+		crl = append(crl, md5.Check(m))
+	}
+
+	for _, cr := range crl {
+		fmt.Printf("%s\n", cr.Print())
+	}
+
+	if md5.HasCheckError(crl) {
+		return xerrors.New("Failure Check")
+	}
+
+	return nil
+}
+
 func (c *CommandLine) Md5sum() error {
 	hrl := []md5.HashResult{}
 	for _, p := range c.Paths {
@@ -68,6 +95,10 @@ func (c *CommandLine) Md5sum() error {
 }
 
 func (c *CommandLine) Exec() error {
+	if c.IsCheck {
+		return c.Check()
+	}
+
 	return c.Md5sum()
 }
 
@@ -76,6 +107,13 @@ func main() {
 		Version: version,
 		Name:    name,
 		Usage:   "gomd5sum",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "check",
+				Aliases: []string{"c"},
+				Usage:   "",
+			},
+		},
 		Action: func(c *cli.Context) error {
 			paths := []string{}
 			for i := 0; i < c.Args().Len(); i++ {
@@ -89,7 +127,7 @@ func main() {
 			cl.Set(
 				isBinOption(false),
 				isTextOption(false),
-				isCheckOption(false),
+				isCheckOption(c.Bool("check")),
 			)
 
 			return cl.Exec()
