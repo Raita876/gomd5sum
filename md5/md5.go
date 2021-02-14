@@ -30,7 +30,13 @@ type Md5 struct {
 	Value string
 }
 
-func (cr *CheckResult) Print() string {
+func (crl CheckResults) Print() {
+	for _, cr := range crl {
+		fmt.Printf("%s\n", cr.print())
+	}
+}
+
+func (cr *CheckResult) print() string {
 	if cr.Error != nil {
 		return fmt.Sprintf("%s: FAILED", cr.Md5.Path)
 	}
@@ -38,7 +44,13 @@ func (cr *CheckResult) Print() string {
 	return fmt.Sprintf("%s: OK", cr.Md5.Path)
 }
 
-func (hr *HashResult) Print() string {
+func (hrl HashResults) Print() {
+	for _, hr := range hrl {
+		fmt.Printf("%s\n", hr.print())
+	}
+}
+
+func (hr *HashResult) print() string {
 	if hr.Error != nil {
 		return fmt.Sprintf("md5sum: %s", hr.Error)
 	}
@@ -75,17 +87,27 @@ func parse(r io.Reader) ([]Md5, error) {
 	return ml, nil
 }
 
-func Hash(path string) HashResult {
+func Md5sum(paths []string) HashResults {
+	hrl := HashResults{}
+	for _, p := range paths {
+		hrl = append(hrl, md5sum(p))
+	}
+
+	return hrl
+}
+
+func md5sum(path string) HashResult {
 	f, err := os.Open(path)
 	if err != nil {
-		return HashResult{Error: err}
+		return HashResult{
+			Md5: Md5{
+				Path: path,
+			},
+			Error: err,
+		}
 	}
 
 	md5, err := hash(f)
-	if err != nil {
-		return HashResult{Error: err}
-	}
-
 	return HashResult{
 		Md5: Md5{
 			Path:  path,
@@ -104,7 +126,26 @@ func hash(r io.Reader) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-func Check(m Md5) CheckResult {
+func Check(paths []string) (CheckResults, error) {
+	ml := []Md5{}
+	for _, p := range paths {
+		tmpMl, err := Parse(p)
+		if err != nil {
+			return CheckResults{}, err
+		}
+
+		ml = append(ml, tmpMl...)
+	}
+
+	crl := CheckResults{}
+	for _, m := range ml {
+		crl = append(crl, check(m))
+	}
+
+	return crl, nil
+}
+
+func check(m Md5) CheckResult {
 	f, err := os.Open(m.Path)
 	if err != nil {
 		return CheckResult{
@@ -134,7 +175,7 @@ func Check(m Md5) CheckResult {
 	}
 }
 
-func HasHashError(hrl []HashResult) bool {
+func (hrl HashResults) HasError() bool {
 	for _, hr := range hrl {
 		if hr.Error != nil {
 			return true
@@ -144,7 +185,7 @@ func HasHashError(hrl []HashResult) bool {
 	return false
 }
 
-func HasCheckError(crl []CheckResult) bool {
+func (crl CheckResults) HasError() bool {
 	for _, hr := range crl {
 		if hr.Error != nil {
 			return true

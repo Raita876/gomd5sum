@@ -37,7 +37,7 @@ func TestPrint(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := tt.hr.Print()
+		got := tt.hr.print()
 		if diff := cmp.Diff(got, tt.want); diff != "" {
 			t.Errorf("Mismatch (-got +want):\n%s", diff)
 		}
@@ -69,7 +69,7 @@ func TestHash(t *testing.T) {
 
 func TestHasHashError(t *testing.T) {
 	tests := []struct {
-		hrl  []HashResult
+		hrl  HashResults
 		want bool
 	}{
 		{
@@ -91,7 +91,7 @@ func TestHasHashError(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := HasHashError(tt.hrl)
+		got := tt.hrl.HasError()
 		if got != tt.want {
 			t.Errorf("Mismatch (got=%t, want=%t)", got, tt.want)
 		}

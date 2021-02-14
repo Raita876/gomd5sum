@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/urfave/cli/v2"
@@ -29,19 +28,19 @@ type Option interface {
 type isBinOption bool
 
 func (ib isBinOption) apply(c *CommandLine) {
-	c.IsBin = true
+	c.IsBin = bool(ib)
 }
 
 type isTextOption bool
 
 func (it isTextOption) apply(c *CommandLine) {
-	c.IsText = true
+	c.IsText = bool(it)
 }
 
 type isCheckOption bool
 
 func (ic isCheckOption) apply(c *CommandLine) {
-	c.IsCheck = true
+	c.IsCheck = bool(ic)
 }
 
 func (c *CommandLine) Set(opts ...Option) {
@@ -51,26 +50,14 @@ func (c *CommandLine) Set(opts ...Option) {
 }
 
 func (c *CommandLine) Check() error {
-	ml := []md5.Md5{}
-	for _, p := range c.Paths {
-		tmpMl, err := md5.Parse(p)
-		if err != nil {
-			return err
-		}
-
-		ml = append(ml, tmpMl...)
+	crl, err := md5.Check(c.Paths)
+	if err != nil {
+		return err
 	}
 
-	crl := []md5.CheckResult{}
-	for _, m := range ml {
-		crl = append(crl, md5.Check(m))
-	}
+	crl.Print()
 
-	for _, cr := range crl {
-		fmt.Printf("%s\n", cr.Print())
-	}
-
-	if md5.HasCheckError(crl) {
+	if crl.HasError() {
 		return xerrors.New("Failure Check")
 	}
 
@@ -78,16 +65,11 @@ func (c *CommandLine) Check() error {
 }
 
 func (c *CommandLine) Md5sum() error {
-	hrl := []md5.HashResult{}
-	for _, p := range c.Paths {
-		hrl = append(hrl, md5.Hash(p))
-	}
+	hrl := md5.Md5sum(c.Paths)
 
-	for _, hr := range hrl {
-		fmt.Printf("%s\n", hr.Print())
-	}
+	hrl.Print()
 
-	if md5.HasHashError(hrl) {
+	if hrl.HasError() {
 		return xerrors.New("Failure Md5sum")
 	}
 
